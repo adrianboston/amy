@@ -11,11 +11,11 @@
 
 namespace amy {
 
-inline mysql_service::mysql_service(AMY_ASIO_NS::io_service& io_service) :
-    detail::service_base<mysql_service>(io_service),
+inline mysql_service::mysql_service(AMY_ASIO_NS::io_context& io_context) :
+    detail::service_base<mysql_service>(io_context),
     work_mutex_(),
-    work_io_service_(new AMY_ASIO_NS::io_service),
-    work_(new AMY_ASIO_NS::io_service::work(*work_io_service_)),
+    work_io_context_(new AMY_ASIO_NS::io_context),
+    work_(new AMY_ASIO_NS::io_context::work(*work_io_context_)),
     work_thread_()
 {}
 
@@ -26,15 +26,15 @@ inline mysql_service::~mysql_service() {
 inline void mysql_service::shutdown_service() {
     work_.reset();
 
-    if (!!work_io_service_) {
-        work_io_service_->stop();
+    if (!!work_io_context_) {
+        work_io_context_->stop();
 
         if (!!work_thread_) {
             work_thread_->join();
             work_thread_.reset();
         }
 
-        work_io_service_.reset();
+        work_io_context_.reset();
     }
 }
 
@@ -89,14 +89,14 @@ inline void mysql_service::close(implementation_type& impl) {
 inline void mysql_service::start_work_thread() {
     std::lock_guard<std::mutex> lock(work_mutex_);
 
-    typedef size_t(AMY_ASIO_NS::io_service::*run_function)();
+    typedef size_t(AMY_ASIO_NS::io_context::*run_function)();
 
     if (!work_thread_) {
         work_thread_.reset(
                 new std::thread(
                     std::bind<run_function>(
-                        &AMY_ASIO_NS::io_service::run,
-                        work_io_service_.get())));
+                        &AMY_ASIO_NS::io_context::run,
+                        work_io_context_.get())));
     }
 }
 
@@ -139,17 +139,17 @@ void mysql_service::async_connect(implementation_type& impl,
     if (!is_open(impl)) {
         AMY_SYSTEM_NS::error_code ec;
         if (!!open(impl, ec)) {
-            this->get_io_service().post(std::bind(handler, ec));
+            this->get_io_context().post(std::bind(handler, ec));
             return;
         }
     }
 
-    if (!!work_io_service_) {
+    if (!!work_io_context_) {
         start_work_thread();
-        work_io_service_->post(
+        work_io_context_->post(
                 connect_handler<Endpoint, ConnectHandler>(
                     impl, endpoint, auth, database, flags,
-                    this->get_io_service(), handler));
+                    this->get_io_context(), handler));
     }
 }
 
@@ -178,13 +178,13 @@ void mysql_service::async_query(implementation_type& impl,
                                 QueryHandler handler)
 {
     if (!is_open(impl)) {
-        this->get_io_service().post(
+        this->get_io_context().post(
                 std::bind(handler, amy::error::not_initialized));
     } else {
-        if (!!work_io_service_) {
+        if (!!work_io_context_) {
             start_work_thread();
-            work_io_service_->post(query_handler<QueryHandler>(
-                        impl, stmt, this->get_io_service(), handler));
+            work_io_context_->post(query_handler<QueryHandler>(
+                        impl, stmt, this->get_io_context(), handler));
         }
     }
 }
@@ -245,16 +245,16 @@ void mysql_service::async_store_result(implementation_type& impl,
                                        StoreResultHandler handler)
 {
     if (!is_open(impl)) {
-        this->get_io_service().post(
+        this->get_io_context().post(
                 std::bind(handler,
                           amy::error::not_initialized,
                           result_set::empty_set(&impl.mysql)));
     } else {
-        if (!!work_io_service_) {
+        if (!!work_io_context_) {
             start_work_thread();
-            work_io_service_->post(
+            work_io_context_->post(
                     store_result_handler<StoreResultHandler>(
-                        impl, this->get_io_service(), handler));
+                        impl, this->get_io_context(), handler));
         }
     }
 }
@@ -358,12 +358,12 @@ inline void mysql_service::implementation::cancel() {
 template<typename Handler>
 mysql_service::handler_base<Handler>::handler_base(
         implementation_type& impl,
-        AMY_ASIO_NS::io_service& io_service,
+        AMY_ASIO_NS::io_context& io_context,
         Handler handler)
   : impl_(impl),
     cancelation_token_(impl.cancelation_token),
-    io_service_(io_service),
-    work_(io_service),
+    io_context_(io_context),
+    work_(io_context),
     handler_(handler)
 {}
 
@@ -374,9 +374,9 @@ mysql_service::connect_handler<Endpoint, ConnectHandler>::connect_handler(
         amy::auth_info const& auth,
         std::string const& database,
         client_flags flags,
-        AMY_ASIO_NS::io_service& io_service,
+        AMY_ASIO_NS::io_context& io_context,
         ConnectHandler handler)
-  : handler_base<ConnectHandler>(impl, io_service, handler),
+  : handler_base<ConnectHandler>(impl, io_context, handler),
     endpoint_(endpoint),
     auth_(auth),
     database_(database),
@@ -389,7 +389,7 @@ void mysql_service::connect_handler<Endpoint, ConnectHandler>::operator()() {
     namespace ops = amy::detail::mysql_ops;
 
     if (this->cancelation_token_.expired()) {
-        this->io_service_.post(
+        this->io_context_.post(
                 std::bind(this->handler_,
                           AMY_ASIO_NS::error::operation_aborted));
         return;
@@ -409,16 +409,16 @@ void mysql_service::connect_handler<Endpoint, ConnectHandler>::operator()() {
                             ec);
 
     this->impl_.flags = flags_;
-    this->io_service_.post(std::bind(this->handler_, ec));
+    this->io_context_.post(std::bind(this->handler_, ec));
 }
 
 template<typename QueryHandler>
 mysql_service::query_handler<QueryHandler>::query_handler(
         implementation_type& impl,
         std::string const& stmt,
-        AMY_ASIO_NS::io_service& io_service,
+        AMY_ASIO_NS::io_context& io_context,
         QueryHandler handler)
-  : handler_base<QueryHandler>(impl, io_service, handler),
+  : handler_base<QueryHandler>(impl, io_context, handler),
     stmt_(stmt)
 {}
 
@@ -428,7 +428,7 @@ void mysql_service::query_handler<QueryHandler>::operator()() {
     namespace ops = amy::detail::mysql_ops;
 
     if (this->cancelation_token_.expired()) {
-        this->io_service_.post(
+        this->io_context_.post(
                 std::bind(this->handler_,
                           AMY_ASIO_NS::error::operation_aborted));
         return;
@@ -443,15 +443,15 @@ void mysql_service::query_handler<QueryHandler>::operator()() {
                           stmt_.length(),
                           ec);
 
-    this->io_service_.post(std::bind(this->handler_, ec));
+    this->io_context_.post(std::bind(this->handler_, ec));
 }
 
 template<typename StoreResultHandler>
 mysql_service::store_result_handler<StoreResultHandler>::store_result_handler(
         implementation_type& impl,
-        AMY_ASIO_NS::io_service& io_service,
+        AMY_ASIO_NS::io_context& io_context,
         StoreResultHandler handler)
-  : handler_base<StoreResultHandler>(impl, io_service, handler)
+  : handler_base<StoreResultHandler>(impl, io_context, handler)
 {}
 
 template<typename StoreResultHandler>
@@ -459,7 +459,7 @@ void mysql_service::store_result_handler<StoreResultHandler>::operator()() {
     namespace ops = amy::detail::mysql_ops;
 
     if (this->cancelation_token_.expired()) {
-        this->io_service_.post(
+        this->io_context_.post(
                 std::bind(this->handler_,
                           AMY_ASIO_NS::error::operation_aborted,
                           result_set::empty_set(&this->impl_.mysql)));
@@ -473,7 +473,7 @@ void mysql_service::store_result_handler<StoreResultHandler>::operator()() {
         this->impl_.free_result();
 
         mysql_service& service =
-            AMY_ASIO_NS::use_service<mysql_service>(this->io_service_);
+            AMY_ASIO_NS::use_service<mysql_service>(this->io_context_);
 
         if (!service.has_more_results(this->impl_)) {
             ec = amy::error::no_more_results;
@@ -487,7 +487,7 @@ void mysql_service::store_result_handler<StoreResultHandler>::operator()() {
     if (ec) {
         // If anything went wrong, invokes the user-defined handler with the
         // error code and an empty result set.
-        this->io_service_.post(
+        this->io_context_.post(
                 std::bind(this->handler_,
                           ec,
                           result_set::empty_set(&this->impl_.mysql)));
@@ -502,7 +502,7 @@ void mysql_service::store_result_handler<StoreResultHandler>::operator()() {
     result_set rs;
     rs.assign(&this->impl_.mysql, this->impl_.last_result, ec);
 
-    this->io_service_.post(std::bind(this->handler_, ec, rs));
+    this->io_context_.post(std::bind(this->handler_, ec, rs));
 }
 
 inline void mysql_service::result_set_deleter::operator()(void* p) {

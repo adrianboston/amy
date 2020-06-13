@@ -22,8 +22,8 @@ public:
     typedef typename service_type::native_type native_type;
 
     /// Constructs a \c basic_connector without opening it.
-    explicit basic_connector(AMY_ASIO_NS::io_service& io_service) :
-        AMY_ASIO_NS::basic_io_object<MySQLService>(io_service)
+    explicit basic_connector(AMY_ASIO_NS::io_context& io_context) :
+        AMY_ASIO_NS::basic_io_object<MySQLService>(io_context)
     {}
 
     native_type native() {

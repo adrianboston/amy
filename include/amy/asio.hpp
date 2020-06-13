@@ -4,7 +4,7 @@
 #if !defined(USE_BOOST_ASIO) || (USE_BOOST_ASIO == 0)
 
 #include <asio/basic_io_object.hpp>
-#include <asio/io_service.hpp>
+#include <asio/io_context.hpp>
 #include <asio/ip/tcp.hpp>
 #include <asio/local/stream_protocol.hpp>
 #include <asio/placeholders.hpp>
@@ -17,7 +17,7 @@
 #else
 
 #include <boost/asio/basic_io_object.hpp>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/local/stream_protocol.hpp>
 #include <boost/asio/placeholders.hpp>

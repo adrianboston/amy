@@ -14,8 +14,8 @@
 
 namespace amy {
 
-inline mariadb_service::mariadb_service(AMY_ASIO_NS::io_service& io_service)
-    : detail::service_base<mariadb_service>(io_service) {}
+inline mariadb_service::mariadb_service(AMY_ASIO_NS::io_context& io_context)
+    : detail::service_base<mariadb_service>(io_context) {}
 
 inline mariadb_service::~mariadb_service() { shutdown_service(); }
 
@@ -23,8 +23,8 @@ inline void mariadb_service::shutdown_service() {}
 
 inline void mariadb_service::construct(implementation_type& impl) {
   impl.ev_ =
-      std::make_unique<AMY_ASIO_NS::posix::stream_descriptor>(get_io_service());
-  impl.timer_ = std::make_unique<AMY_ASIO_NS::steady_timer>(get_io_service());
+      std::make_unique<AMY_ASIO_NS::posix::stream_descriptor>(get_io_context());
+  impl.timer_ = std::make_unique<AMY_ASIO_NS::steady_timer>(get_io_context());
 }
 
 inline void mariadb_service::destroy(implementation_type& impl) { close(impl); }
@@ -100,7 +100,7 @@ mariadb_service::async_connect(implementation_type& impl,
   if (!is_open(impl)) {
     AMY_SYSTEM_NS::error_code ec;
     if (!!open(impl, ec)) {
-      AMY_ASIO_NS::post(this->get_io_service().get_executor(),
+      AMY_ASIO_NS::post(this->get_io_context().get_executor(),
           boost::beast::bind_handler(handler, ec));
       return;
     }
@@ -109,12 +109,12 @@ mariadb_service::async_connect(implementation_type& impl,
   AMY_SYSTEM_NS::error_code ec;
   set_option(impl, options::nonblock_default(), ec);
   if (ec) {
-    AMY_ASIO_NS::post(this->get_io_service().get_executor(),
+    AMY_ASIO_NS::post(this->get_io_context().get_executor(),
         boost::beast::bind_handler(handler, ec));
     return;
   }
 
-  connect_handler<ConnectHandler, Endpoint>(this->get_io_service(), handler,
+  connect_handler<ConnectHandler, Endpoint>(this->get_io_context(), handler,
       impl, endpoint, auth, database, flags)(ec, 0);
 }
 
@@ -140,12 +140,12 @@ BOOST_ASIO_INITFN_RESULT_TYPE(QueryHandler, void(AMY_SYSTEM_NS::error_code))
 mariadb_service::async_query(
     implementation_type& impl, std::string const& stmt, QueryHandler handler) {
   if (!is_open(impl)) {
-    AMY_ASIO_NS::post(this->get_io_service().get_executor(),
+    AMY_ASIO_NS::post(this->get_io_context().get_executor(),
         boost::beast::bind_handler(handler, amy::error::not_initialized));
     return;
   }
 
-  query_handler<QueryHandler>(this->get_io_service(), handler, impl, stmt)(
+  query_handler<QueryHandler>(this->get_io_context(), handler, impl, stmt)(
       {}, 0);
 }
 
@@ -204,14 +204,14 @@ BOOST_ASIO_INITFN_RESULT_TYPE(
 mariadb_service::async_store_result(
     implementation_type& impl, StoreResultHandler handler) {
   if (!is_open(impl)) {
-    AMY_ASIO_NS::post(this->get_io_service().get_executor(),
+    AMY_ASIO_NS::post(this->get_io_context().get_executor(),
         boost::beast::bind_handler(handler, amy::error::not_initialized,
             result_set::empty_set(&impl.mysql)));
     return;
   }
 
   store_result_handler<StoreResultHandler>(
-      this->get_io_service(), handler, impl)({}, 0);
+      this->get_io_context(), handler, impl)({}, 0);
 }
 
 template <typename Handler>
@@ -220,13 +220,13 @@ BOOST_ASIO_INITFN_RESULT_TYPE(
 mariadb_service::async_query_result(
     implementation_type& impl, std::string const& stmt, Handler handler) {
   if (!is_open(impl)) {
-    AMY_ASIO_NS::post(this->get_io_service().get_executor(),
+    AMY_ASIO_NS::post(this->get_io_context().get_executor(),
         boost::beast::bind_handler(handler, amy::error::not_initialized,
             result_set::empty_set(&impl.mysql)));
     return;
   }
 
-  query_result_handler<Handler>(this->get_io_service(), handler, impl, stmt)(
+  query_result_handler<Handler>(this->get_io_context(), handler, impl, stmt)(
       {}, 0);
 }
 

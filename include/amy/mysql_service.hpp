@@ -34,7 +34,7 @@ public:
 
     typedef detail::mysql_handle native_type;
 
-    explicit mysql_service(AMY_ASIO_NS::io_service& io_service);
+    explicit mysql_service(AMY_ASIO_NS::io_context& io_context);
 
     ~mysql_service();
 
@@ -114,8 +114,8 @@ private:
 
     detail::mysql_lib_init mysql_lib_init_;
     std::mutex work_mutex_;
-    std::unique_ptr<AMY_ASIO_NS::io_service> work_io_service_;
-    std::unique_ptr<AMY_ASIO_NS::io_service::work> work_;
+    std::unique_ptr<AMY_ASIO_NS::io_context> work_io_context_;
+    std::unique_ptr<AMY_ASIO_NS::io_context::work> work_;
     std::unique_ptr<std::thread> work_thread_;
 
     void start_work_thread();
@@ -171,14 +171,14 @@ template<typename Handler>
 class mysql_service::handler_base {
 public:
     explicit handler_base(implementation_type& impl,
-                          AMY_ASIO_NS::io_service& io_service,
+                          AMY_ASIO_NS::io_context& io_context,
                           Handler handler);
 
 protected:
     implementation_type& impl_;
     std::weak_ptr<void> cancelation_token_;
-    AMY_ASIO_NS::io_service& io_service_;
-    AMY_ASIO_NS::io_service::work work_;
+    AMY_ASIO_NS::io_context& io_context_;
+    AMY_ASIO_NS::io_context::work work_;
     Handler handler_;
 
 }; // class mysql_service::handler_base
@@ -191,7 +191,7 @@ public:
                              amy::auth_info const& auth,
                              std::string const& database,
                              client_flags flags,
-                             AMY_ASIO_NS::io_service& io_service,
+                             AMY_ASIO_NS::io_context& io_context,
                              ConnectHandler handler);
 
     void operator()();
@@ -209,7 +209,7 @@ class mysql_service::query_handler : public handler_base<QueryHandler> {
 public:
     explicit query_handler(implementation_type& impl,
                            std::string const& stmt,
-                           AMY_ASIO_NS::io_service& io_service,
+                           AMY_ASIO_NS::io_context& io_context,
                            QueryHandler handler);
 
     void operator()();
@@ -225,7 +225,7 @@ class mysql_service::store_result_handler :
 {
 public:
     explicit store_result_handler(implementation_type& impl,
-                                  AMY_ASIO_NS::io_service& io_service,
+                                  AMY_ASIO_NS::io_context& io_context,
                                   StoreResultHandler handler);
 
     void operator()();

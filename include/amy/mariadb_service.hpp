@@ -35,7 +35,7 @@ public:
 
   typedef detail::mysql_handle native_type;
 
-  explicit mariadb_service(AMY_ASIO_NS::io_service& io_service);
+  explicit mariadb_service(AMY_ASIO_NS::io_context& io_context);
 
   ~mariadb_service();
 

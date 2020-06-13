@@ -31,7 +31,11 @@ public:
     std::string name() const {
         return std::string(field_->name, field_->name_length);
     }
-
+    
+    enum_field_types type() const {
+        return field_->type;
+    }
+    
     unsigned long length() const {
         return field_->length;
     }
