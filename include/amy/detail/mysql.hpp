@@ -5,12 +5,12 @@
 #   include <winsock2.h>
 #   include <mysql/mysql.h>
 #   include <mysql/errmsg.h>
-#else
+#elif __APPLE__
 #   include <mysql.h>
 #   include <errmsg.h>
-
-//#   include <mysql/mysql.h>
-//#   include <mysql/errmsg.h>
+#else
+#   include <mysql/mysql.h>
+#   include <mysql/errmsg.h>
 #endif // #ifdef WIN32
 
 #endif // __AMY_DETAIL_MYSQL_HPP__
