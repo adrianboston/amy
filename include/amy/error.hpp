@@ -74,18 +74,33 @@ enum client_errors {
     net_packet_too_large = CR_NET_PACKET_TOO_LARGE,
 
     /// Embedded server
+    #ifndef CR_EMBEDDED_CONNECTION
+    #define CR_EMBEDDED_CONNECTION 2021
+    #endif
     embedded_connection = CR_EMBEDDED_CONNECTION,
 
     /// Error on SHOW SLAVE STATUS
+    #ifndef CR_PROBE_SLAVE_STATUS
+    #define CR_PROBE_SLAVE_STATUS 2022
+    #endif
     probe_slave_status = CR_PROBE_SLAVE_STATUS,
 
     /// Error on SHOW SLAVE HOSTS
+    #ifndef CR_PROBE_SLAVE_HOSTS
+    #define CR_PROBE_SLAVE_HOSTS 2023
+    #endif
     probe_slave_hosts = CR_PROBE_SLAVE_HOSTS,
 
     /// Error connecting to slave
+    #ifndef CR_PROBE_SLAVE_CONNECT
+    #define CR_PROBE_SLAVE_CONNECT 2024
+    #endif
     probe_slave_connect = CR_PROBE_SLAVE_CONNECT,
 
     /// Error connecting to master
+    #ifndef CR_PROBE_MASTER_CONNECT
+    #define CR_PROBE_MASTER_CONNECT 2025
+    #endif
     probe_master_connect = CR_PROBE_MASTER_CONNECT,
 
     /// SSL connection error
@@ -96,9 +111,15 @@ enum client_errors {
 
     /// This client library is licensed only for use with MySQL servers having
     /// '%s' license
+    #ifndef CR_WRONG_LICENSE
+    #define CR_WRONG_LICENSE 2028
+    #endif
     wrong_license = CR_WRONG_LICENSE,
 
     /// Invalid use of null pointer
+    #ifndef CR_NULL_POINTER
+    #define CR_NULL_POINTER 2029
+    #endif
     null_pointer = CR_NULL_POINTER,
 
     /// Statement not prepared
@@ -108,9 +129,15 @@ enum client_errors {
     params_not_bound = CR_PARAMS_NOT_BOUND,
 
     /// Data truncated
+    #ifndef CR_DATA_TRUNCATED
+    #define CR_DATA_TRUNCATED 2032
+    #endif
     data_truncated = CR_DATA_TRUNCATED,
 
     /// No parameters exist in the statement
+    #ifndef CR_NO_PARAMETERS_EXISTS
+    #define CR_NO_PARAMETERS_EXISTS 2033
+    #endif
     no_parameters_exists = CR_NO_PARAMETERS_EXISTS,
 
     /// Invalid parameter number
@@ -127,41 +154,74 @@ enum client_errors {
     shared_memory_connection = CR_SHARED_MEMORY_CONNECTION,
 
     /// Can't open shared memory; client could not create request event (%lu)
+    #ifndef CR_SHARED_MEMORY_CONNECT_REQUEST_ERROR
+    #define CR_SHARED_MEMORY_CONNECT_REQUEST_ERROR 2038
+    #endif
     shared_memory_connect_request_error =
         CR_SHARED_MEMORY_CONNECT_REQUEST_ERROR,
 
     /// Can't open shared memory; no answer event received from server (%lu)
+    #ifndef CR_SHARED_MEMORY_CONNECT_ANSWER_ERROR
+    #define CR_SHARED_MEMORY_CONNECT_ANSWER_ERROR 2039
+    #endif
     shared_memory_connect_answer_error = CR_SHARED_MEMORY_CONNECT_ANSWER_ERROR,
 
     /// Can't open shared memory; server could not allocate file mapping (%lu)
+    #ifndef CR_SHARED_MEMORY_CONNECT_FILE_MAP_ERROR
+    #define CR_SHARED_MEMORY_CONNECT_FILE_MAP_ERROR 2040
+    #endif
     shared_memory_connect_file_map_error =
         CR_SHARED_MEMORY_CONNECT_FILE_MAP_ERROR,
 
     /// Can't open shared memory; server could not get pointer to file mapping
     /// (%lu)
+    #ifndef CR_SHARED_MEMORY_CONNECT_MAP_ERROR
+    #define CR_SHARED_MEMORY_CONNECT_MAP_ERROR 2041
+    #endif
     shared_memory_connect_map_error = CR_SHARED_MEMORY_CONNECT_MAP_ERROR,
 
     /// Can't open shared memory; client could not allocate file mapping (%lu)
+    #ifndef CR_SHARED_MEMORY_FILE_MAP_ERROR
+    #define CR_SHARED_MEMORY_FILE_MAP_ERROR 2042
+    #endif
     shared_memory_file_map_error = CR_SHARED_MEMORY_FILE_MAP_ERROR,
 
     /// Can't open shared memory; client could not get pointer to file mapping
     /// (%lu)
+    #ifndef CR_SHARED_MEMORY_MAP_ERROR
+    #define CR_SHARED_MEMORY_MAP_ERROR 2043
+    #endif
     shared_memory_map_error = CR_SHARED_MEMORY_MAP_ERROR,
 
     /// Can't open shared memory; client could not create %s event (%lu)
+    #ifndef CR_SHARED_MEMORY_EVENT_ERROR
+    #define CR_SHARED_MEMORY_EVENT_ERROR 2044
+    #endif
     shared_memory_event_error = CR_SHARED_MEMORY_EVENT_ERROR,
 
     /// Can't open shared memory; no answer from server (%lu)
+#ifndef CR_SHARED_MEMORY_CONNECT_ABANDONED_ERROR
+#define CR_SHARED_MEMORY_CONNECT_ABANDONED_ERROR 2045
+#endif
     shared_memory_connect_abandoned_error =
         CR_SHARED_MEMORY_CONNECT_ABANDONED_ERROR,
 
     /// Can't open shared memory; cannot send request event to server (%lu)
+    #ifndef CR_SHARED_MEMORY_CONNECT_SET_ERROR
+    #define CR_SHARED_MEMORY_CONNECT_SET_ERROR 2046
+    #endif
     shared_memory_connect_set_error = CR_SHARED_MEMORY_CONNECT_SET_ERROR,
 
     /// Wrong or unknown protocol
+    #ifndef CR_CONN_UNKNOW_PROTOCOL
+    #define CR_CONN_UNKNOW_PROTOCOL 2047
+    #endif
     conn_unknow_protocol = CR_CONN_UNKNOW_PROTOCOL,
 
     /// Invalid connection handle
+    #ifndef CR_INVALID_CONN_HANDLE
+    #define CR_INVALID_CONN_HANDLE 2048
+    #endif
     invalid_conn_handle = CR_INVALID_CONN_HANDLE,
 
     /// Connection using old (pre-4.1.1) authentication protocol refused
@@ -169,6 +229,9 @@ enum client_errors {
     secure_auth = MYSQL_SECURE_AUTH,
 
     /// Row retrieval was canceled by mysql_stmt_close() call
+    #ifndef CR_FETCH_CANCELED
+    #define CR_FETCH_CANCELED 2050
+    #endif
     fetch_canceled = CR_FETCH_CANCELED,
 
     /// Attempt to read column without prior row fetch
@@ -179,6 +242,9 @@ enum client_errors {
 
     /// Attempt to read a row while there is no result set associated with the
     /// statement
+    #ifndef CR_NO_RESULT_SET
+    #define CR_NO_RESULT_SET 2053
+    #endif
     no_result_set = CR_NO_RESULT_SET,
 
     /// This feature is not implemented yet
